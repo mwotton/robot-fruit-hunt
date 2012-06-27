@@ -1,0 +1,153 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Robot-fruit-hunt by egonSchiele</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Robot-fruit-hunt</h1>
+        <p class="header">Writing a Haskell Bot for Scribd's fruit hunt</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/egonSchiele/robot-fruit-hunt/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/egonSchiele/robot-fruit-hunt/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/egonSchiele/robot-fruit-hunt">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/egonSchiele">egonSchiele</a></p>
+
+
+      </header>
+      <section>
+        <h1>Welcome!</h1>
+
+<p>So you want to write a Haskell bot for the <a href="http://www.scribd.com/jobs/botrace">Robot Fruit Hunt</a>. You came to the right place!</p>
+
+<p>First, <a href="http://www.scribd.com/jobs/botrace_rules">read about how the game works</a>.</p>
+
+<p>Then, make sure you have followed the instructions in the <a href="https://github.com/egonSchiele/robot-fruit-hunt">README</a> to set up your coding environment.</p>
+
+<p>Now, let's write our first bot.</p>
+
+<h1>Hello World</h1>
+
+<p>Here's a Haskell bot that always goes EAST:</p>
+
+<div class="highlight">
+<pre><span class="nf">makeMove</span> <span class="ow">=</span> <span class="n">return</span> <span class="kt">EAST</span>
+</pre>
+</div>
+
+
+<h1>A Smarter Bot</h1>
+
+<p>Here's a bot that always goes to the nearest fruit:</p>
+
+<div class="highlight">
+<pre><span class="kr">import</span> <span class="nn">Data.Maybe</span>
+<span class="kr">import</span> <span class="nn">Data.Ord</span> <span class="p">(</span><span class="nf">comparing</span><span class="p">)</span>
+<span class="kr">import</span> <span class="nn">Data.List</span> <span class="p">(</span><span class="nf">sortBy</span><span class="p">)</span>
+
+<span class="c1">-- manhattan distance</span>
+<span class="nf">dist</span> <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">)</span> <span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">)</span> <span class="ow">=</span> <span class="p">(</span><span class="n">abs</span> <span class="o">$</span> <span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">abs</span> <span class="o">$</span> <span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="p">)</span>
+
+<span class="c1">-- positions</span>
+<span class="nf">myPos</span> <span class="ow">=</span> <span class="p">(</span><span class="n">getMyX</span><span class="p">,</span> <span class="n">getMyY</span><span class="p">)</span>
+<span class="nf">oppPos</span> <span class="ow">=</span> <span class="p">(</span><span class="n">getOpponentX</span><span class="p">,</span> <span class="n">getOpponentY</span><span class="p">)</span>
+
+<span class="nf">for</span> <span class="ow">=</span> <span class="n">flip</span> <span class="n">map</span>
+
+<span class="c1">-- get a list of all the positions with items</span>
+<span class="nf">allItems</span> <span class="ow">::</span> <span class="p">[(</span><span class="kt">Int</span><span class="p">,</span> <span class="kt">Int</span><span class="p">)]</span>
+<span class="nf">allItems</span> <span class="ow">=</span> <span class="n">catMaybes</span> <span class="o">$</span> <span class="n">for</span> <span class="n">positions</span> <span class="o">$</span> <span class="nf">\</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">-&gt;</span>
+              <span class="kr">if</span> <span class="p">(</span><span class="n">isJust</span> <span class="o">.</span> <span class="n">hasItem</span> <span class="o">$</span> <span class="n">getBoard</span> <span class="o">!!</span> <span class="n">x</span> <span class="o">!!</span> <span class="n">y</span><span class="p">)</span>
+                <span class="kr">then</span> <span class="kt">Just</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+                <span class="kr">else</span> <span class="kt">Nothing</span>
+
+<span class="c1">-- all items, sorted by those closest to our bot</span>
+<span class="nf">nearestItems</span> <span class="ow">::</span> <span class="p">[(</span><span class="kt">Int</span><span class="p">,</span> <span class="kt">Int</span><span class="p">)]</span>
+<span class="nf">nearestItems</span> <span class="ow">=</span> <span class="n">sortBy</span> <span class="p">(</span><span class="n">comparing</span> <span class="o">$</span> <span class="n">dist</span> <span class="n">myPos</span><span class="p">)</span> <span class="n">allItems</span>
+
+<span class="nf">moveTo</span> <span class="ow">::</span> <span class="p">(</span><span class="kt">Int</span><span class="p">,</span> <span class="kt">Int</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="kt">Move</span>
+<span class="nf">moveTo</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="o">|</span> <span class="n">getMyX</span> <span class="o">&lt;</span> <span class="n">x</span> <span class="ow">=</span> <span class="kt">EAST</span>
+    <span class="o">|</span> <span class="n">getMyX</span> <span class="o">&gt;</span> <span class="n">x</span> <span class="ow">=</span> <span class="kt">WEST</span>
+    <span class="o">|</span> <span class="n">getMyY</span> <span class="o">&lt;</span> <span class="n">y</span> <span class="ow">=</span> <span class="kt">SOUTH</span>
+    <span class="o">|</span> <span class="n">getMyY</span> <span class="o">&gt;</span> <span class="n">y</span> <span class="ow">=</span> <span class="kt">NORTH</span>
+    <span class="o">|</span> <span class="n">otherwise</span>  <span class="ow">=</span> <span class="kt">TAKE</span>
+
+<span class="nf">makeMove</span> <span class="ow">::</span> <span class="kt">State</span> <span class="p">(</span><span class="kt">Map</span> <span class="kt">String</span> <span class="kt">String</span><span class="p">)</span> <span class="kt">Move</span>
+<span class="nf">makeMove</span> <span class="ow">=</span> <span class="n">return</span> <span class="o">.</span> <span class="n">moveTo</span> <span class="o">.</span> <span class="n">head</span> <span class="o">$</span> <span class="n">nearestItems</span>
+</pre>
+</div>
+
+
+<h1>Debugging With Trace Statements</h1>
+
+<p>You can use the <a href="http://www.haskell.org/ghc/docs/latest/html/libraries/base/Debug-Trace.html#v:trace">trace</a> function for debugging.
+The <code>trace</code> statement takes two values. It prints out the first and returns the second. Example:</p>
+
+<div class="highlight">
+<pre><span class="nf">makeMove</span> <span class="ow">=</span> <span class="n">trace</span> <span class="s">"I'm moving!"</span> <span class="p">(</span><span class="n">return</span> <span class="kt">EAST</span><span class="p">)</span>
+</pre>
+</div>
+
+
+<p>You can <em>only</em> use <code>trace</code> while testing locally. Output will be printed to the javascript console.</p>
+
+<h1>IO</h1>
+
+<p>You may have noticed that <code>makeMove</code> is a pure function. Your bot cannot do any IO. That includes <code>trace</code> functions and random number generators as well. When you submit your bot, make sure it doesn't do any IO!</p>
+
+<h1>State</h1>
+
+<p>makeMove uses the <a href="http://hackage.haskell.org/packages/archive/mtl/1.1.0.2/doc/html/Control-Monad-State-Lazy.html">State Monad</a>. In this case the state is a <code>Map</code> of Strings to Strings.
+You can access the state with <code>get</code> and modify it with <code>put</code>. Here's a simple bot that keeps a counter of how many moves it's made:</p>
+
+<div class="highlight">
+<pre><span class="nf">makeMove</span> <span class="ow">=</span> <span class="kr">do</span>
+  <span class="kr">let</span> <span class="n">key</span> <span class="ow">=</span> <span class="s">"move_num"</span>
+  <span class="n">state</span> <span class="ow">&lt;-</span> <span class="n">get</span>
+  <span class="kr">case</span> <span class="n">lookup</span> <span class="n">key</span> <span class="n">state</span> <span class="kr">of</span>
+    <span class="kt">Just</span> <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="n">put</span> <span class="o">$</span> <span class="n">adjust</span> <span class="p">(</span><span class="nf">\</span><span class="n">num</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">read</span> <span class="n">num</span> <span class="ow">::</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="n">key</span> <span class="n">state</span>
+    <span class="kt">Nothing</span> <span class="ow">-&gt;</span> <span class="n">put</span> <span class="o">$</span> <span class="n">insert</span> <span class="n">key</span> <span class="p">(</span><span class="n">show</span> <span class="mi">0</span><span class="p">)</span> <span class="n">state</span>
+  <span class="n">return</span> <span class="kt">EAST</span>
+</pre>
+</div>
+
+
+<h1>The Complete API</h1>
+
+<p>The complete API can be found <a href="http://github.com/egonSchiele/robot-fruit-hunt/blob/master/haskell/HaskellAPI.markdown">here</a>.</p>
+
+<p>Happy coding!</p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+		          <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-29851666-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
