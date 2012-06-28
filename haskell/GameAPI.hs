@@ -1,8 +1,4 @@
-type ItemType = Int
-data Move = ERR | EAST | NORTH | WEST | SOUTH | TAKE | PASS deriving (Enum, Eq, Ord)
-
-instance Show Move where
-  show = show . fromEnum
+import Types
 
 -- convenience function, all positions on the board
 positions :: [(Int, Int)]
@@ -31,13 +27,9 @@ getOpponentY :: Int
 getOpponentY = %d
 
 -- c
-getBoard :: [[ItemType]]
+getBoard :: Board
 getBoard = %s
 
-hasItem :: ItemType -> Maybe ItemType
-hasItem field = if field > 0
-                  then Just field
-                  else Nothing
 
 getNumberOfItemTypes :: Int
 getNumberOfItemTypes = length . nub . flatten $ getBoard
@@ -63,4 +55,4 @@ getTotalItemCount = getCount items
 -- c
 __state = %s
 
-main = print $ runState makeMove __state
+main = print $ runState (makeMove getBoard (getMyX,getMyY) (getOpponentX,getOpponentY) positions) __state
